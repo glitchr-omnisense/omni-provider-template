@@ -1,0 +1,81 @@
+#!/bin/sh
+# Turns this template into a provider package of an omni family:
+#
+#   bin/init <family> <name> "<Title>" [--class <Studly>] [--owner <github-owner>] [--author "<name>"] [--email <email>]
+#   bin/init omnimap maplibre "MapLibre"
+#
+# <family>  one of the directories under skeleton/ but common (omnimap, omnidrive, ...)
+# <name>    the factory name and the package's second half: lowercase, digits, dashes (omnimap/<name>)
+# <Title>   the service's name as people write it
+# --class   the class prefix (default: <name> in StudlyCaps, dashes dropped)
+#
+# It copies skeleton/common and skeleton/<family> to the root, fills every placeholder (__Name__,
+# __name__, __Title__, __Namespace__, __package__, ...), in file names too, then removes skeleton/,
+# bin/init and the template's own README. Nothing is committed: read `git status`, then commit.
+# Requires sh and perl (both on macOS and on every Linux CI image).
+set -eu
+
+usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+[ $# -ge 3 ] || usage
+family=$1 name=$2 title=$3
+shift 3
+class='' owner='glitchr-studio' author=$(git config user.name 2>/dev/null || echo 'Your Name') email=$(git config user.email 2>/dev/null || echo 'you@example.org')
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --class) class=$2; shift 2 ;;
+        --owner) owner=$2; shift 2 ;;
+        --author) author=$2; shift 2 ;;
+        --email) email=$2; shift 2 ;;
+        *) usage ;;
+    esac
+done
+
+root=$(cd "$(dirname "$0")/.." && pwd)
+cd "$root"
+[ -d "skeleton/$family" ] && [ "$family" != common ] || { echo "No family \"$family\"; known: $(ls skeleton | grep -v '^common$' | tr '\n' ' ')" >&2; exit 2; }
+printf '%s' "$name" | grep -Eq '^[a-z0-9][a-z0-9-]*$' || { echo "The name is lowercase letters, digits and dashes: $name" >&2; exit 2; }
+[ -n "$class" ] || class=$(printf '%s' "$name" | perl -pe 's/(^|-)([a-z0-9])/\U$2/g')
+printf '%s' "$class" | grep -Eq '^[A-Z][A-Za-z0-9]*$' || { echo "The class prefix is StudlyCaps: $class" >&2; exit 2; }
+
+# The family's facts.
+. "./skeleton/$family/family.env"
+namespace="$vendor_ns\\$class"
+package="$family/$name"
+repo="$family-$name"
+year=$(date +%Y)
+ci_sha=$(cat skeleton/CI_SHA)
+
+export P_NAME="$name" P_CLASS="$class" P_TITLE="$title" P_NS="$namespace" P_PACKAGE="$package" P_REPO="$repo" \
+    P_FAMILY="$family" P_CORE="$core" P_CORE_REPO="$core_repo" P_CORE_CONSTRAINT="$core_constraint" P_VENDOR="$vendor_ns" \
+    P_BRANCH="$branch" P_CONTRACT="$contract" P_OWNER="$owner" P_AUTHOR="$author" P_EMAIL="$email" P_YEAR="$year" P_CI_SHA="$ci_sha"
+
+# Copy: common first, the family's files over it.
+for src in skeleton/common "skeleton/$family"; do
+    (cd "$src" && find . -type f ! -name family.env) | while read -r file; do
+        target=$(printf '%s' "${file#./}" | perl -pe 's/__Name__/$ENV{P_CLASS}/g; s/__name__/$ENV{P_NAME}/g')
+        mkdir -p "$(dirname "$target")"
+        cp "$src/$file" "$target"
+        perl -pi -e '
+            s/__Namespace_json__/do { (my $n = $ENV{P_NS}) =~ s{\\}{\\\\}g; $n }/ge;
+            s/__Namespace_escaped__/$ENV{P_NS}/g;
+            s/__Namespace__/$ENV{P_NS}/g;
+            s/__Name__/$ENV{P_CLASS}/g; s/__name__/$ENV{P_NAME}/g; s/__Title__/$ENV{P_TITLE}/g;
+            s/__package__/$ENV{P_PACKAGE}/g; s/__repo__/$ENV{P_REPO}/g; s/__family__/$ENV{P_FAMILY}/g;
+            s/__core_repo__/$ENV{P_CORE_REPO}/g; s/__core_constraint__/$ENV{P_CORE_CONSTRAINT}/g; s/__core__/$ENV{P_CORE}/g;
+            s/__Vendor__/$ENV{P_VENDOR}/g; s/__branch__/$ENV{P_BRANCH}/g; s/__Contract__/$ENV{P_CONTRACT}/g;
+            s/__owner__/$ENV{P_OWNER}/g; s/__author__/$ENV{P_AUTHOR}/g; s/__email__/$ENV{P_EMAIL}/g;
+            s/__year__/$ENV{P_YEAR}/g; s/__ci_sha__/$ENV{P_CI_SHA}/g;
+        ' "$target"
+    done
+done
+
+left=$(grep -rlE '__(Name|name|Title|Namespace|package|core|family|Vendor|branch|owner|author|email|year|ci_sha|Contract)[a-z_]*__' --exclude-dir=.git --exclude-dir=skeleton --exclude-dir=bin . || true)
+[ -z "$left" ] || { echo "Placeholders left in: $left" >&2; exit 1; }
+
+rm -rf skeleton bin/init
+rmdir bin 2>/dev/null || true
+# The template's own self-test is not the provider's.
+rm -f .github/workflows/template.yml
+
+echo "$package ($namespace) made from the $family skeleton."
+echo "Next: composer install && vendor/bin/phpunit (the conformance suite runs), then CONTRIBUTING.md."

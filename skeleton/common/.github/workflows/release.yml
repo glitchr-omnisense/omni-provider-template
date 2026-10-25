@@ -1,0 +1,26 @@
+# A release on a pushed tag vX.Y.Z: the package's suite on the tag, then glitchr-studio/ci's release
+# workflow (the tag checked, the notes from CHANGELOG.md, the source archive and its provenance, the
+# GitHub release, Packagist told when the repository holds PACKAGIST_USERNAME/PACKAGIST_TOKEN).
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  verify:
+    uses: glitchr-studio/ci/.github/workflows/php-package.yml@__ci_sha__
+    with:
+      smoke-class: '__Namespace_escaped__\__Name__Factory'
+  release:
+    needs: verify
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    uses: glitchr-studio/ci/.github/workflows/php-release.yml@__ci_sha__
+    secrets: inherit
