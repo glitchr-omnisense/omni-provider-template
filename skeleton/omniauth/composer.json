@@ -1,0 +1,53 @@
+{
+    "name": "__package__",
+    "type": "library",
+    "description": "__Title__ for omniauth: sign-in through the identity provider, under any PHP host.",
+    "keywords": [
+        "authentication",
+        "sign-in",
+        "oauth2",
+        "__name__",
+        "framework-agnostic",
+        "omniauth"
+    ],
+    "homepage": "https://github.com/__owner__/__repo__",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "__author__",
+            "email": "__email__"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "omniscient/omniauth": "__core_constraint__",
+        "symfony/http-client-contracts": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "symfony/http-client": "^6.4|^7.0|^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "__Namespace_json__\\": ""
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "__Namespace_json__\\Tests\\": "Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "extra": {
+        "branch-alias": {
+            "dev-__branch__": "__branch__-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

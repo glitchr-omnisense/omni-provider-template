@@ -1,0 +1,52 @@
+{
+    "name": "__package__",
+    "type": "library",
+    "description": "__Title__ for omnitrade: payments through the service, under any PHP host.",
+    "keywords": [
+        "payment",
+        "checkout",
+        "__name__",
+        "framework-agnostic",
+        "omnitrade"
+    ],
+    "homepage": "https://github.com/__owner__/__repo__",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "__author__",
+            "email": "__email__"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "omniscient/omnitrade": "__core_constraint__",
+        "symfony/http-client-contracts": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "symfony/http-client": "^6.4|^7.0|^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "__Namespace_json__\\": ""
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "__Namespace_json__\\Tests\\": "Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "extra": {
+        "branch-alias": {
+            "dev-__branch__": "__branch__-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

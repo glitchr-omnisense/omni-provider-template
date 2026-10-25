@@ -1,0 +1,53 @@
+{
+    "name": "__package__",
+    "type": "library",
+    "description": "__Title__ for omnidrive: files kept there, read and written by any PHP host.",
+    "keywords": [
+        "storage",
+        "filesystem",
+        "files",
+        "flysystem",
+        "__name__",
+        "framework-agnostic",
+        "omnidrive"
+    ],
+    "homepage": "https://github.com/__owner__/__repo__",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "__author__",
+            "email": "__email__"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "league/flysystem-memory": "^3.0",
+        "omniscient/omnidrive": "__core_constraint__"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "__Namespace_json__\\": ""
+        },
+        "exclude-from-classmap": [
+            "/Tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "__Namespace_json__\\Tests\\": "Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "extra": {
+        "branch-alias": {
+            "dev-__branch__": "__branch__-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
