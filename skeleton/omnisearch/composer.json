@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "omniscient/omnisearch": "__core_constraint__"
+        "omnisense/omnisearch": "__core_constraint__"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

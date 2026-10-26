@@ -12,7 +12,7 @@ the MIT licence, a changelog, and the CI and release workflows of
    `omnimap-maplibre`), or from a terminal:
 
    ```sh
-   gh repo create <owner>/omnimap-maplibre --public --template glitchr-studio/omni-provider-template --clone
+   gh repo create <owner>/omnimap-maplibre --public --template glitchr-omnisense/omni-provider-template --clone
    cd omnimap-maplibre
    ```
 

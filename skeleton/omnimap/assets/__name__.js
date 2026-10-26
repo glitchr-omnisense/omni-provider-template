@@ -1,5 +1,5 @@
 /**
- * __Title__'s driver for omnimap's script (assets/omnimap.js of omniscient/omnimap):
+ * __Title__'s driver for omnimap's script (assets/omnimap.js of omnisense/omnimap):
  * draws the description __Name__Provider::describe() gave.
  *
  *   import { register } from 'omnimap';

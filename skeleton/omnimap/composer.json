@@ -13,7 +13,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "omniscient/omnimap": "__core_constraint__",
+        "omnisense/omnimap": "__core_constraint__",
         "psr/simple-cache": "^2.0|^3.0",
         "symfony/http-client-contracts": "^3.0"
     },

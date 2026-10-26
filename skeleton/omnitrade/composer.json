@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "omniscient/omnitrade": "__core_constraint__",
+        "omnisense/omnitrade": "__core_constraint__",
         "symfony/http-client-contracts": "^3.0"
     },
     "require-dev": {

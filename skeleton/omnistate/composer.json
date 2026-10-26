@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "omniscient/omnistate": "__core_constraint__",
+        "omnisense/omnistate": "__core_constraint__",
         "symfony/http-client-contracts": "^3.0"
     },
     "require-dev": {
