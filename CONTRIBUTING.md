@@ -77,8 +77,10 @@ docker run --rm -v "$PWD":/app -w /app ghcr.io/glitchr-studio/php:8.4 sh -c 'com
    ```
 
 3. `.github/workflows/release.yml` runs the package's suite on the tag, then
-   glitchr-studio/ci's `php-release.yml`: the tag is checked as a version, the changelog's
-   section becomes the release's notes (no section, no release), the tag's source archive is
+   glitchr-studio/ci's `php-release.yml`: the tag is checked as a version and against the branch
+   alias (the tagged commit on the branch `extra.branch-alias` names, the version in its series:
+   `v1.2.0` on `1.x`), the changelog's section becomes the release's notes (no section, no
+   release; a `-rc.N` without one takes `Unreleased`'s), the tag's source archive is
    attached with its SHA-256 and a build provenance attestation
    (`gh attestation verify <zip> --repo <owner>/<repo> --signer-repo glitchr-studio/ci`:
    the attestation is signed by glitchr-studio/ci's release workflow, which the package calls), and the GitHub release is published -
@@ -87,7 +89,9 @@ docker run --rm -v "$PWD":/app -w /app ghcr.io/glitchr-studio/php:8.4 sh -c 'com
    Packagist's GitHub integration picks tags up, or the release workflow tells it when the
    repository holds `PACKAGIST_USERNAME` and `PACKAGIST_TOKEN` secrets.
 
-A published tag is never moved or deleted: a mistake is a new version.
+A published tag is never moved or deleted: a mistake is a new version. The whole process, for any
+package of the families: glitchr-studio/ci's
+[docs/releasing.md](https://github.com/glitchr-studio/ci/blob/main/docs/releasing.md).
 
 ## 6. Make it known
 
