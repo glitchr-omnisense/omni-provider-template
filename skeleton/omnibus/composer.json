@@ -24,6 +24,7 @@
         "symfony/http-client-contracts": "^3.0"
     },
     "require-dev": {
+        "omnisense/contracts": "^1.0@dev",
         "phpunit/phpunit": "^11.0",
         "symfony/http-client": "^6.4|^7.0|^8.0"
     },
@@ -45,6 +46,9 @@
     "extra": {
         "branch-alias": {
             "dev-__branch__": "__branch__-dev"
+        },
+        "omnisense": {
+            "policy": "policy.json"
         }
     },
     "config": {

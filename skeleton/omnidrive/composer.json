@@ -25,6 +25,7 @@
         "omnisense/omnidrive": "__core_constraint__"
     },
     "require-dev": {
+        "omnisense/contracts": "^1.0@dev",
         "phpunit/phpunit": "^11.0"
     },
     "autoload": {
@@ -45,6 +46,9 @@
     "extra": {
         "branch-alias": {
             "dev-__branch__": "__branch__-dev"
+        },
+        "omnisense": {
+            "policy": "policy.json"
         }
     },
     "config": {

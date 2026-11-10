@@ -2,7 +2,9 @@
 
 namespace __Namespace__;
 
+use Omnisense\Contracts\Policy\Backoff;
 use Omnitrade\Exception\ProviderException;
+use Omnitrade\Http\Throttle;
 use Omnitrade\Model\Money;
 use Omnitrade\Model\Status;
 use Omnitrade\Model\Transaction;
@@ -15,7 +17,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * answer, a body that is not JSON (a proxy's page) - with the provider's own
  * error code when it gives one; transaction() reads a payment as the family's
  * Transaction. Replace the authentication, the address, the fields and
- * STATUSES with the service's.
+ * STATUSES with the service's. Given the gateway's Backoff (the factory's
+ * Config::backoff()), a 429 is a RateLimitedException and the provider's
+ * Retry-After holds every next call, refused without a request.
  */
 final class Api
 {
@@ -36,6 +40,8 @@ final class Api
         private readonly string $provider,
         #[\SensitiveParameter] private readonly string $secretKey,
         private readonly string $baseUri,
+        /** The waits the provider asks for, shared by the gateway's calls (omnisense/contracts' Backoff). */
+        private readonly ?Backoff $backoff = null,
     ) {
     }
 
@@ -47,13 +53,16 @@ final class Api
     public function request(string $method, string $path, array $options = []): array
     {
         $options['headers'] = (\is_array($options['headers'] ?? null) ? $options['headers'] : []) + ['Authorization' => 'Bearer '.$this->secretKey, 'Accept' => 'application/json'];
+        Throttle::before($this->backoff);
         try {
             $response = $this->http->request($method, rtrim($this->baseUri, '/').'/'.ltrim($path, '/'), $options + ['timeout' => 15]);
             $status = $response->getStatusCode();
+            $headers = $response->getHeaders(false);
             $body = $response->getContent(false);
         } catch (ExceptionInterface $e) {
             throw new ProviderException($this->provider, 'No answer: '.$e->getMessage(), null, $e);
         }
+        Throttle::after($this->backoff, $this->provider, $status, $headers);
 
         $data = json_decode($body, true);
         if ($status >= 400) {

@@ -50,6 +50,7 @@ final class __Name__Factory extends GatewayFactory
             $c->string('script') ?? __Name__Gateway::SCRIPT,
             $c->string('field') ?? __Name__Gateway::FIELD,
             $c->string('base_uri') ?? __Name__Gateway::BASE_URI,
+            $c->backoff(),
         );
     }
 }

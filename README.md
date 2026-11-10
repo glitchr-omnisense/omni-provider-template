@@ -2,7 +2,8 @@
 
 The starting point of a provider package for an omni family (omnimap, omnidrive, omnibus,
 omnitrade, omnistate, omnishield, omnisearch, omniauth): the provider's classes implementing the family's
-contract, the family's conformance suite wired, a `BareTest`, docs with their "Verified, and not",
+contract, the family's conformance suite wired, a `BareTest`, a starting usage policy as data
+(`policy.json`, omnisense/contracts' schema, with its test), docs with their "Verified, and not",
 the MIT licence, a changelog, and the CI and release workflows of
 [glitchr-studio/ci](https://github.com/glitchr-studio/ci), pinned to a commit.
 

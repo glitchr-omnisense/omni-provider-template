@@ -1,6 +1,6 @@
 # __package__
 
-__Title__ for [__core__](https://github.com/glitchr-studio/__core_repo__), under any PHP host.
+__Title__ for [__core__](https://github.com/glitchr-omnisense/__core_repo__), under any PHP host.
 Plain PHP: no framework in `require`.
 
 ```php
@@ -27,6 +27,15 @@ $registry = new __Vendor__\Registry([new __Name__Factory()], ['default' => ['dri
   every class loaded with the package's requirements alone (`BareTest`).
 - Not verified yet: the engine itself. Say here what was run against a real server, when, and
   how (a `live` PHPUnit group, a server in Docker).
+
+## Usage policy
+
+`policy.json` declares what __Title__'s terms say, as data ([omnisense/contracts'
+schema](https://github.com/glitchr-omnisense/contracts/blob/1.x/docs/declare-your-policy.md)): its
+rate limits, its rights (commercial use, caching, storage, redistribution, the credit to show), what
+every request must carry, where and when the terms were read. `composer.json` names it
+(`extra.omnisense.policy`); a site that installs the package is held to it and may only make it
+stricter. Until the terms are read, everything in it is unknown.
 
 ## Responsibility
 

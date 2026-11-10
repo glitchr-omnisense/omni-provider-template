@@ -37,7 +37,9 @@ final class __Name__Factory extends GatewayFactory
             'omnitrade.factory_title' => '__Title__',
             'omnitrade.required_options' => ['secret_key'],
             'base_uri' => self::BASE_URI,
-            'omnitrade.api' => static fn (Config $c) => null === $http ? null : new Api($http, '__name__', self::string($c, 'secret_key'), self::string($c, 'base_uri')),
+            // Its usage policy, as its package declares it (omnisense/contracts' schema): fill it in from the terms.
+            'omnitrade.policy' => __DIR__.'/policy.json',
+            'omnitrade.api' => static fn (Config $c) => null === $http ? null : new Api($http, '__name__', self::string($c, 'secret_key'), self::string($c, 'base_uri'), $c->backoff()),
             'omnitrade.action.purchase' => null === $http ? null : new PurchaseAction(),
             'omnitrade.action.fetch_transaction' => null === $http ? null : new FetchTransactionAction(),
         ]);

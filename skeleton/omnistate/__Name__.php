@@ -2,6 +2,8 @@
 
 namespace __Namespace__;
 
+use Omnisense\Contracts\Policy\DeclaresUsagePolicyInterface;
+use Omnisense\Contracts\Policy\UsagePolicy;
 use Omnistate\Exception\UnavailableException;
 use Omnistate\Model\Company;
 use Omnistate\Model\CompanyStatus;
@@ -21,10 +23,16 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * BASE_URI, the identifier's form in supports() (Omnistate\Identifier\ has the
  * SIREN, SIRET and VAT rules), the paths and toCompany()'s fields; implement
  * the other contracts the service answers (VatRegistryInterface,
- * ProfessionalRegistryInterface...: omnistate's docs/providers.md).
+ * ProfessionalRegistryInterface...: omnistate's docs/providers.md). Its usage
+ * policy is policy.json, beside this class: fill it in from the register's
+ * terms; Omnistate enforces it (a site's limits too) before each call, and a
+ * 429's Retry-After holds the next ones.
  */
-final class __Name__ implements CompanyRegistryInterface
+final class __Name__ implements CompanyRegistryInterface, DeclaresUsagePolicyInterface
 {
+    /** The usage policy its package declares (omnisense/contracts' schema). */
+    public const POLICY = __DIR__.'/policy.json';
+
     public const BASE_URI = 'https://registry.example.org/api/';
 
     /** Seconds to wait after an HTTP 429 that does not say how long. */
@@ -35,6 +43,12 @@ final class __Name__ implements CompanyRegistryInterface
         #[\SensitiveParameter] private readonly ?string $apiKey = null,
         private readonly string $baseUri = self::BASE_URI,
     ) {
+    }
+
+    /** Its usage policy, as its package declares it: policy.json beside this class. */
+    public function usagePolicy(): UsagePolicy
+    {
+        return UsagePolicy::fromFile(self::POLICY);
     }
 
     public function name(): string
@@ -90,7 +104,8 @@ final class __Name__ implements CompanyRegistryInterface
             if (429 === $status) {
                 $retry = $response->getHeaders(false)['retry-after'][0] ?? '';
 
-                throw new UnavailableException('__Title__: too many calls.', is_numeric($retry) && (int) $retry > 0 ? (int) $retry : self::RETRY_AFTER);
+                // With its status: Omnistate holds the register's next calls for the wait it asks.
+                throw new UnavailableException('__Title__: too many calls.', is_numeric($retry) && (int) $retry > 0 ? (int) $retry : self::RETRY_AFTER, null, 429);
             }
             $body = $response->getContent(false);
         } catch (ExceptionInterface $e) {

@@ -19,6 +19,7 @@
     ],
     "require": {
         "php": ">=8.2",
+        "omnisense/contracts": "^1.0@dev",
         "omnisense/omnitrade": "__core_constraint__",
         "symfony/http-client-contracts": "^3.0"
     },
@@ -44,6 +45,9 @@
     "extra": {
         "branch-alias": {
             "dev-__branch__": "__branch__-dev"
+        },
+        "omnisense": {
+            "policy": "policy.json"
         }
     },
     "config": {

@@ -1,0 +1,27 @@
+{
+    "$schema": "https://github.com/glitchr-omnisense/contracts/blob/1.x/resources/usage-policy.schema.json",
+    "provider": "__name__",
+    "rateLimits": null,
+    "concurrency": null,
+    "rights": {
+        "commercial": "unknown",
+        "openSourceRequired": null,
+        "caching": {"permission": "unknown", "maxTtl": null},
+        "storage": "unknown",
+        "redistribution": "unknown",
+        "attribution": {"required": false, "text": null, "url": null, "where": []},
+        "licence": null
+    },
+    "requirements": {
+        "key": false,
+        "userAgent": {"required": false, "pattern": null}
+    },
+    "provenance": {
+        "terms": "https://example.org/terms",
+        "policy": null,
+        "verifiedAt": null,
+        "declaredBy": "maintainer",
+        "contact": null,
+        "notes": "A starting point, nothing read yet: read __Title__'s terms and usage policy at their source, then fill this file in and set verifiedAt to that day - rateLimits (null while unknown, [] when the terms set none; a window of several units with \"every\", a quota counted in characters, units or points with \"unit\" and each operation's \"cost\"), concurrency, the rights (unknown stays unknown: a site cannot turn it into allowed), what a request must carry (a key, a User-Agent), the terms' address. omnisense/contracts' docs/declare-your-policy.md says how."
+    }
+}

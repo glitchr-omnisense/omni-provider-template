@@ -2,6 +2,9 @@
 
 namespace __Namespace__;
 
+use Omnisense\Contracts\Policy\Backoff;
+use Omnisense\Contracts\Policy\DeclaresUsagePolicyInterface;
+use Omnisense\Contracts\Policy\UsagePolicy;
 use Omnishield\ChallengeInterface;
 use Omnishield\Exception\InvalidKeyException;
 use Omnishield\Exception\ProviderException;
@@ -18,10 +21,16 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * success, hostname, challenge_ts and error-codes. Replace the addresses, the
  * fields, REASONS (the provider's codes in the family's words) and the
  * Capabilities with the service's: scores and actions where it signs them
- * (omnishield's docs/gateways.md).
+ * (omnishield's docs/gateways.md). Its usage policy is policy.json, beside
+ * this class: fill it in from the service's terms.
  */
-final class __Name__Gateway implements ChallengeInterface
+final class __Name__Gateway implements ChallengeInterface, DeclaresUsagePolicyInterface
 {
+    /** The usage policy its package declares (omnisense/contracts' schema). */
+    public const POLICY = __DIR__.'/policy.json';
+
+    private static ?UsagePolicy $policy = null;
+
     public const BASE_URI = 'https://challenges.example.org/api/';
     public const SCRIPT = 'https://challenges.example.org/widget.js';
     public const FIELD = '__name__-response';
@@ -40,7 +49,15 @@ final class __Name__Gateway implements ChallengeInterface
         private readonly string $script = self::SCRIPT,
         private readonly string $field = self::FIELD,
         private readonly string $baseUri = self::BASE_URI,
+        /** The waits the provider asks for (a 429's Retry-After), kept across the gateway's calls: the factory's Config::backoff(). */
+        private readonly ?Backoff $backoff = null,
     ) {
+    }
+
+    /** Its usage policy, as its package declares it: policy.json beside this class. */
+    public function usagePolicy(): UsagePolicy
+    {
+        return self::$policy ??= UsagePolicy::fromFile(self::POLICY);
     }
 
     public function getName(): string
@@ -55,7 +72,7 @@ final class __Name__Gateway implements ChallengeInterface
 
     public function capabilities(): Capabilities
     {
-        return new Capabilities(challenge: true, thirdParty: true, cookies: false);
+        return new Capabilities(challenge: true, thirdParty: true, cookies: false, policy: $this->usagePolicy());
     }
 
     public function widget(?string $action = null): Widget
@@ -84,7 +101,7 @@ final class __Name__Gateway implements ChallengeInterface
 
         $answer = Answer::send($this->http, '__name__', 'POST', rtrim($this->baseUri, '/').'/siteverify', [
             'body' => array_filter(['secret' => $this->secret, 'response' => $attempt->token, 'remoteip' => $attempt->ip]),
-        ]);
+        ], $this->backoff);
         if (401 === $answer->status || 403 === $answer->status) {
             throw new InvalidKeyException('__name__', \sprintf('HTTP %d: the secret was refused.', $answer->status), (string) $answer->status);
         }

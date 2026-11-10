@@ -23,6 +23,16 @@ No PHP on your machine? Run the same in the CI image:
 docker run --rm -v "$PWD":/app -w /app ghcr.io/glitchr-studio/php:8.4 sh -c 'composer install && vendor/bin/phpunit'
 ```
 
+To try the provider against an unreleased omnisense/contracts (a change to the kernel or its
+schema), mount its checkout and let Composer take it from there, as the families' harnesses do:
+
+```sh
+docker run --rm -v "$PWD":/app -v ~/Sites/omnisense-contracts:/contracts:ro -w /app ghcr.io/glitchr-studio/php:8.4 \
+    sh -c 'composer config repositories.contracts path /contracts && composer update omnisense/contracts && vendor/bin/phpunit'
+```
+
+(`composer config` writes the path repository into `composer.json`: leave it out of the commit.)
+
 ## 2. Implement
 
 - The package is plain PHP: no framework in `require`. HTTP clients (Symfony's contracts, PSR-18)
@@ -37,10 +47,29 @@ docker run --rm -v "$PWD":/app -w /app ghcr.io/glitchr-studio/php:8.4 sh -c 'com
 - Errors follow the family's rule (its core's docs): the service's refusals (401, 403, 404, 429,
   5xx) and unreadable answers (a proxy's HTML page in a 200) are the family's provider exception,
   a request that got no answer its unreachable one. Keep the service's message.
-- Respect the service's terms in code: its rate limits, its required User-Agent, its attribution.
-  List its terms' addresses where the family asks for them.
+- Respect the service's terms. Its rate limits, its rights and what a request must carry are not
+  code but data: `policy.json` (step 3).
+- Where the family is built on [omnisense/contracts](https://github.com/glitchr-omnisense/contracts)
+  (omnishield, omnistate, omnitrade in this template), the provider implements
+  `DeclaresUsagePolicyInterface` (`usagePolicy()`, read from `policy.json`) or its factory names the
+  file, gives it to its Capabilities, and passes the factory's `$c->backoff()` to its HTTP calls, so
+  that a 429's `Retry-After` holds the next calls without sending them.
 
-## 3. Test
+## 3. Declare its usage policy
+
+`bin/init` writes a starting `policy.json` at the package's root, everything unknown, and names it
+in `composer.json` (`extra.omnisense.policy`). Read the service's terms and usage policy at their
+source, on the day you write it, and fill it in: the rate limits (a window of several units with
+`every`; a quota counted in characters, units or points with `unit` and each operation's `cost`),
+`concurrency`, the rights (commercial use, caching, storage, redistribution, the credit), what a
+request must carry (a key, a User-Agent), the terms' address and `verifiedAt`. Unknown stays
+`"unknown"`: never write "allowed" for what the terms do not say. How, field by field:
+[declare your policy](https://github.com/glitchr-omnisense/contracts/blob/1.x/docs/declare-your-policy.md).
+`Tests/PolicyTest.php` checks the file against the schema; assert the figures you read there. The
+omnisense site's [usage policies](https://glitchr-omnisense.github.io/omnisense/apis/policies) table
+shows every provider's declaration.
+
+## 4. Test
 
 - `Tests/<Name>ContractTest.php` uses the family's conformance trait (`<Core>\Testing\*ContractTests`).
   It runs offline, on recorded answers: give the suite the service's real answers (recorded
@@ -56,7 +85,7 @@ docker run --rm -v "$PWD":/app -w /app ghcr.io/glitchr-studio/php:8.4 sh -c 'com
 - PHPStan at the highest level: `phpstan analyse`. What `phpstan-baseline.neon` lists is accepted;
   anything new fails the CI. Keep the baseline empty in a new package.
 
-## 4. Document
+## 5. Document
 
 - `README.md`: what the provider is, its smallest use, and **Verified, and not**: what was run
   (the suite, offline; the live group, on which date, against what), and what was not. Never
@@ -65,7 +94,7 @@ docker run --rm -v "$PWD":/app -w /app ghcr.io/glitchr-studio/php:8.4 sh -c 'com
   refuses, its errors, the service's terms.
 - `CHANGELOG.md`: every change under `## Unreleased` as you go.
 
-## 5. Release
+## 6. Release
 
 1. Move the `## Unreleased` entries under `## [X.Y.Z] - YYYY-MM-DD`, commit, push, and wait for the
    branch's CI to be green.
@@ -93,7 +122,7 @@ A published tag is never moved or deleted: a mistake is a new version. The whole
 package of the families: glitchr-studio/ci's
 [docs/releasing.md](https://github.com/glitchr-studio/ci/blob/main/docs/releasing.md).
 
-## 6. Make it known
+## 7. Make it known
 
 Ask the family's maintainers to list the provider in the core's README and `suggest`, and the
 omnisense site's catalogue (`catalog/<family>.yaml`) picks it up for the package pages and the
