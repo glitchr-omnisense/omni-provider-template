@@ -24,7 +24,9 @@ $registry = new __Vendor__\Registry([new __Name__Factory()], ['main' => ['factor
 
 - Verified (`vendor/bin/phpunit`, PHP 8.4): __family__'s conformance suite
   (`Tests/__Name__ContractTest.php`, `__Vendor__\Testing\__Contract__`) on recorded answers;
-  every class loaded with the package's requirements alone (`BareTest`).
+  every class loaded with the package's requirements alone (`BareTest`); the usage policy read
+  and valid (`PolicyTest`); where an HTTP client is given, a write answered 503 sent once through
+  a retrying client (`NoRetryTest`); PHPStan at level max, its baseline empty.
 - Not verified yet: the service's live answers. Say here what was run against the real service,
   when, and how (a `live` PHPUnit group, keyless or with keys from the environment).
 

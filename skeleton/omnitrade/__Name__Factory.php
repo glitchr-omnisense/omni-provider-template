@@ -22,7 +22,9 @@ use Omnitrade\GatewayFactory;
  * authentication in Api, add one action per request it answers (Authorize,
  * Capture, Refund, Notify...: omnitrade's docs/providers.md) and declare each in
  * populateConfig(). The HTTP client is the application's, given to the
- * constructor: without one, nothing is supported.
+ * constructor: without one, nothing is supported. omnitrade's GatewayFactory
+ * keeps it with its retries off (omnisense/contracts' Http\NoRetry), so that
+ * no payment is sent twice by a retrying client (Tests/NoRetryTest.php).
  */
 final class __Name__Factory extends GatewayFactory
 {

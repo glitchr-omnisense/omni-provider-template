@@ -21,8 +21,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * success, hostname, challenge_ts and error-codes. Replace the addresses, the
  * fields, REASONS (the provider's codes in the family's words) and the
  * Capabilities with the service's: scores and actions where it signs them
- * (omnishield's docs/gateways.md). Its usage policy is policy.json, beside
- * this class: fill it in from the service's terms.
+ * (omnishield's docs/gateways.md). The answer is read through Data, never a
+ * cast of mixed. Its usage policy is policy.json, beside this class: fill
+ * it in from the service's terms.
  */
 final class __Name__Gateway implements ChallengeInterface, DeclaresUsagePolicyInterface
 {
@@ -108,15 +109,15 @@ final class __Name__Gateway implements ChallengeInterface, DeclaresUsagePolicyIn
         if (400 <= $answer->status) {
             throw new ProviderException('__name__', \sprintf('HTTP %d: %s', $answer->status, substr(trim($answer->body), 0, 200)), (string) $answer->status);
         }
-        $data = $answer->json();
-        $codes = array_values(array_map(static fn (mixed $code) => \is_scalar($code) ? (string) $code : '', \is_array($data['error-codes'] ?? null) ? $data['error-codes'] : []));
+        $data = Data::of($answer->json());
+        $codes = Data::texts($data->get('error-codes'));
         if (array_intersect($codes, ['missing-input-secret', 'invalid-input-secret'])) {
             throw new InvalidKeyException('__name__', 'The secret was refused: '.implode(', ', $codes).'.', $codes[0] ?? null);
         }
 
-        $hostname = \is_string($data['hostname'] ?? null) && '' !== $data['hostname'] ? $data['hostname'] : null;
-        $at = $this->date($data['challenge_ts'] ?? null);
-        if (true !== ($data['success'] ?? null)) {
+        $hostname = $data->string('hostname');
+        $at = $data->dateTime('challenge_ts');
+        if (true !== $data->get('success')) {
             $reasons = array_values(array_unique(array_map(static fn (string $code) => self::REASONS[$code] ?? Verdict::INVALID, $codes ?: ['invalid-input-response'])));
 
             return new Verdict(false, hostname: $hostname, at: $at, reasons: $reasons, codes: $codes);
@@ -126,14 +127,5 @@ final class __Name__Gateway implements ChallengeInterface, DeclaresUsagePolicyIn
         }
 
         return new Verdict(true, hostname: $hostname, at: $at);
-    }
-
-    private function date(mixed $value): ?\DateTimeImmutable
-    {
-        try {
-            return \is_string($value) && '' !== $value ? new \DateTimeImmutable($value) : null;
-        } catch (\Exception) {
-            return null;
-        }
     }
 }

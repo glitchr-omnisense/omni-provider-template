@@ -1,5 +1,6 @@
-# PHPStan at the highest level, as glitchr-studio/ci's workflow runs it. phpstan-baseline.neon lists
-# what is accepted; the CI fails on anything else.
+# PHPStan at the highest level, as glitchr-studio/ci's workflow runs it, tests included.
+# phpstan-baseline.neon is empty from the first commit and stays so: anything PHPStan reports fails
+# the CI. A decoded answer is read through Data (or the family's reader), never a cast of mixed.
 includes:
     - phpstan-baseline.neon
 

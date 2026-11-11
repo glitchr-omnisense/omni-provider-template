@@ -1,11 +1,27 @@
 # omni-provider-template
 
 The starting point of a provider package for an omni family (omnimap, omnidrive, omnibus,
-omnitrade, omnistate, omnishield, omnisearch, omniauth): the provider's classes implementing the family's
-contract, the family's conformance suite wired, a `BareTest`, a starting usage policy as data
-(`policy.json`, omnisense/contracts' schema, with its test), docs with their "Verified, and not",
-the MIT licence, a changelog, and the CI and release workflows of
-[glitchr-studio/ci](https://github.com/glitchr-studio/ci), pinned to a commit.
+omnitrade, omnistate, omnishield, omnisearch, omniauth), on
+[omnisense/contracts](https://github.com/glitchr-omnisense/contracts) 1.0.0-rc.1 or later:
+
+- the provider's classes implementing the family's contract, its conformance suite wired, and
+  answers read through `Data` (the kernel's `Http\Data`), so that PHPStan runs at its highest
+  level with an empty baseline from the first commit;
+- a starting usage policy as data (`policy.json`, everything unknown until the terms are read,
+  named in `extra.omnisense.policy`) and its test;
+- the HTTP client kept from replaying a write (`Http\NoRetry`, with a test over Symfony's
+  `RetryableHttpClient`) and the service's waits honoured (`$c->backoff()`);
+- in the omnibus skeleton, the three kinds of request a registry's guard does not see, each
+  counted through the factory's guard and tested: an OAuth token request (`token`), the further
+  pages of a listing (`PolicyGuard::pages()`), a request limited per resource (`trackParcel`, per
+  parcel);
+- a `BareTest` (the kernel's bare check), docs with their "Verified, and not", the MIT licence, a
+  changelog, a `.gitattributes` keeping tests and CI files out of the archive, and the CI and
+  release workflows of [glitchr-studio/ci](https://github.com/glitchr-studio/ci), pinned to a
+  commit.
+
+[CONTRIBUTING.md](CONTRIBUTING.md) is the way through, and ends with the checklist a maintainer
+or an API company follows.
 
 ## Use it
 
@@ -27,13 +43,14 @@ the MIT licence, a changelog, and the CI and release workflows of
    `Omnimap\MapLibre\MapLibreFactory`, the factory name `maplibre`...), then `skeleton/` and
    `bin/init` are removed. Nothing is committed.
 
-3. `composer install && vendor/bin/phpunit`: the generated provider passes its family's
-   conformance suite as it is - a minimal, working provider. Make it the service's, keeping the
+3. `composer install && vendor/bin/phpunit && vendor/bin/phpstan analyse`: the generated
+   provider passes its family's conformance suite and PHPStan as it is - a minimal, working
+   provider. Make it the service's, keeping the
    suite green; then follow [CONTRIBUTING.md](CONTRIBUTING.md) to document and release it.
 
 `bin/init` needs `sh` and `perl`. The families it knows are the directories under `skeleton/`
-(but `common`); `.github/workflows/template.yml` generates each of them and runs its suite on every
-change here.
+(but `common` and `parts`, the pieces several families share); `.github/workflows/template.yml`
+generates each of them and runs its suite and PHPStan on every change here.
 
 ## Licence
 

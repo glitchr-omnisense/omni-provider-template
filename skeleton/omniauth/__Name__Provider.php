@@ -6,6 +6,7 @@ use Omniauth\OAuth\Authorization;
 use Omniauth\OAuth\Exception\ProviderError;
 use Omniauth\OAuth\Identity;
 use Omniauth\OAuth\Provider\Provider;
+use Omnisense\Contracts\Http\NoRetry;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -27,9 +28,19 @@ final class __Name__Provider implements Provider
     public const USERINFO_URL = 'https://accounts.example.org/oauth/userinfo';
     public const SCOPES = ['profile', 'email'];
 
-    /** @param list<string> $scopes */
+    private readonly HttpClientInterface $http;
+
+    /**
+     * The HTTP client is the application's, kept with its retries off
+     * (omnisense/contracts' Http\NoRetry): a code is exchanged once, and a
+     * retrying client (framework.http_client's retry_failed) would send it
+     * again after a 503, the second answer an invalid_grant
+     * (Tests/NoRetryTest.php).
+     *
+     * @param list<string> $scopes
+     */
     public function __construct(
-        private readonly HttpClientInterface $http,
+        HttpClientInterface $http,
         private readonly string $clientId,
         #[\SensitiveParameter] private readonly string $clientSecret,
         private readonly string $redirectUri,
@@ -39,6 +50,7 @@ final class __Name__Provider implements Provider
         private readonly string $tokenUrl = self::TOKEN_URL,
         private readonly string $userinfoUrl = self::USERINFO_URL,
     ) {
+        $this->http = NoRetry::of($http);
     }
 
     public function name(): string
@@ -69,39 +81,38 @@ final class __Name__Provider implements Provider
             'client_secret' => $this->clientSecret,
             'code_verifier' => $authorization->verifier,
         ]]);
-        $accessToken = $token['access_token'] ?? null;
-        if (!\is_string($accessToken) || '' === $accessToken) {
+        $accessToken = $token->string('access_token');
+        if (null === $accessToken) {
             throw new ProviderError(ProviderError::EXCHANGE, 'The token answer carries no access_token.');
         }
 
         $profile = $this->call('GET', $this->userinfoUrl, ['headers' => ['Authorization' => 'Bearer '.$accessToken]]);
-        $subject = $profile['sub'] ?? null;
-        if (!\is_scalar($subject) || '' === (string) $subject) {
+        $subject = $profile->string('sub');
+        if (null === $subject) {
             throw new ProviderError(ProviderError::SUBJECT, 'The profile carries no subject.');
         }
-        $email = \is_string($profile['email'] ?? null) && str_contains($profile['email'], '@') ? $profile['email'] : null;
-        $name = $profile['name'] ?? null;
+        $email = $profile->string('email');
+        $email = null !== $email && str_contains($email, '@') ? $email : null;
 
         return new Identity(
             provider: $this->name,
-            subject: (string) $subject,
+            subject: $subject,
             email: $email,
-            emailVerified: null !== $email && Identity::verified($profile['email_verified'] ?? false),
-            name: \is_string($name) && '' !== $name ? $name : null,
-            claims: $profile,
+            emailVerified: null !== $email && Identity::verified($profile->get('email_verified') ?? false),
+            name: $profile->string('name'),
+            claims: Data::map($profile->toArray()),
         );
     }
 
     /**
-     * A JSON answer of the provider; a refusal (HTTP 400 or more), no answer
-     * or an unreadable one is a ProviderError - its message never showing the
-     * secret, which travels in the request's body only.
+     * A JSON answer of the provider, read through Data (never a cast of
+     * mixed); a refusal (HTTP 400 or more), no answer or an unreadable one is
+     * a ProviderError - its message never showing the secret, which travels
+     * in the request's body only.
      *
      * @param array<string, mixed> $options
-     *
-     * @return array<string, mixed>
      */
-    private function call(string $method, string $url, array $options): array
+    private function call(string $method, string $url, array $options): Data
     {
         try {
             $response = $this->http->request($method, $url, $options + ['headers' => ['Accept' => 'application/json'], 'timeout' => 15]);
@@ -112,7 +123,7 @@ final class __Name__Provider implements Provider
         }
         $data = json_decode($body, true);
         if ($status >= 400) {
-            $error = \is_array($data) && \is_scalar($data['error'] ?? null) ? (string) $data['error'] : 'HTTP '.$status;
+            $error = Data::of($data)->string('error') ?? 'HTTP '.$status;
 
             throw new ProviderError(ProviderError::EXCHANGE, \sprintf('__Title__ refused %s: %s.', parse_url($url, \PHP_URL_PATH), $error));
         }
@@ -120,7 +131,6 @@ final class __Name__Provider implements Provider
             throw new ProviderError(ProviderError::EXCHANGE, \sprintf('__Title__ answered %s with what is not JSON.', parse_url($url, \PHP_URL_PATH)));
         }
 
-        /** @var array<string, mixed> $data */
-        return $data;
+        return Data::of($data);
     }
 }

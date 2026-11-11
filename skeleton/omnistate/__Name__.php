@@ -2,6 +2,7 @@
 
 namespace __Namespace__;
 
+use Omnisense\Contracts\Http\NoRetry;
 use Omnisense\Contracts\Policy\DeclaresUsagePolicyInterface;
 use Omnisense\Contracts\Policy\UsagePolicy;
 use Omnistate\Exception\UnavailableException;
@@ -26,7 +27,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * ProfessionalRegistryInterface...: omnistate's docs/providers.md). Its usage
  * policy is policy.json, beside this class: fill it in from the register's
  * terms; Omnistate enforces it (a site's limits too) before each call, and a
- * 429's Retry-After holds the next ones.
+ * 429's Retry-After holds the next ones. Answers are read through Data,
+ * never a cast of mixed.
  */
 final class __Name__ implements CompanyRegistryInterface, DeclaresUsagePolicyInterface
 {
@@ -38,11 +40,21 @@ final class __Name__ implements CompanyRegistryInterface, DeclaresUsagePolicyInt
     /** Seconds to wait after an HTTP 429 that does not say how long. */
     private const RETRY_AFTER = 60;
 
+    private readonly HttpClientInterface $http;
+
+    /**
+     * The HTTP client is the application's, kept with its retries off
+     * (omnisense/contracts' Http\NoRetry): a retrying client
+     * (framework.http_client's retry_failed) would answer a 429 itself, out of
+     * sight of the guard Omnistate holds the register's calls with, and send
+     * requests the policy never counted (Tests/NoRetryTest.php).
+     */
     public function __construct(
-        private readonly HttpClientInterface $http,
+        HttpClientInterface $http,
         #[\SensitiveParameter] private readonly ?string $apiKey = null,
         private readonly string $baseUri = self::BASE_URI,
     ) {
+        $this->http = NoRetry::of($http);
     }
 
     /** Its usage policy, as its package declares it: policy.json beside this class. */
@@ -71,25 +83,21 @@ final class __Name__ implements CompanyRegistryInterface, DeclaresUsagePolicyInt
 
     public function search(string $query, int $limit = 10): array
     {
-        $answer = $this->ask('companies', ['q' => $query, 'limit' => $limit]) ?? [];
+        $answer = $this->ask('companies', ['q' => $query, 'limit' => $limit]) ?? Data::of([]);
         $companies = [];
-        foreach (\is_array($answer['results'] ?? null) ? $answer['results'] : [] as $result) {
-            if (\is_array($result)) {
-                $companies[] = $this->toCompany($result);
-            }
+        foreach ($answer->list('results') as $result) {
+            $companies[] = $this->toCompany($result);
         }
 
         return \array_slice($companies, 0, $limit);
     }
 
     /**
-     * The answer's JSON, null on HTTP 404 or 410 (not known).
+     * The answer's JSON, read through Data; null on HTTP 404 or 410 (not known).
      *
      * @param array<string, scalar> $query
-     *
-     * @return array<mixed>|null
      */
-    private function ask(string $path, array $query = []): ?array
+    private function ask(string $path, array $query = []): ?Data
     {
         try {
             $response = $this->http->request('GET', rtrim($this->baseUri, '/').'/'.$path, [
@@ -119,30 +127,26 @@ final class __Name__ implements CompanyRegistryInterface, DeclaresUsagePolicyInt
             throw new UnavailableException(\sprintf('__Title__ answered what is not JSON: %s', substr(trim($body), 0, 200)));
         }
 
-        return $data;
+        return Data::of($data);
     }
 
-    /**
-     * A company as the register answers it: {"id", "name", "status" ("active", "closed"), "country"}.
-     *
-     * @param array<mixed> $r
-     */
-    private function toCompany(array $r): Company
+    /** A company as the register answers it: {"id", "name", "status" ("active", "closed"), "country"}. */
+    private function toCompany(Data $r): Company
     {
-        $identifier = $r['id'] ?? null;
-        $name = $r['name'] ?? null;
-        if (!\is_scalar($identifier) || '' === (string) $identifier || !\is_string($name) || '' === $name) {
+        $identifier = $r->string('id');
+        $name = $r->string('name');
+        if (null === $identifier || null === $name) {
             throw new UnavailableException('__Title__ answered a company without its identifier or its name.');
         }
-        $country = $r['country'] ?? null;
+        $country = $r->string('country');
 
         return new Company(
-            identifier: (string) $identifier,
+            identifier: $identifier,
             name: $name,
-            status: 'closed' === ($r['status'] ?? null) ? CompanyStatus::CLOSED : CompanyStatus::ACTIVE,
-            country: \is_string($country) && 1 === preg_match('/^[A-Za-z]{2}$/', $country) ? strtoupper($country) : 'FR',
+            status: 'closed' === $r->string('status') ? CompanyStatus::CLOSED : CompanyStatus::ACTIVE,
+            country: null !== $country && 1 === preg_match('/^[A-Za-z]{2}$/', $country) ? strtoupper($country) : 'FR',
             source: $this->name(),
-            raw: $r,
+            raw: $r->toArray(),
         );
     }
 }

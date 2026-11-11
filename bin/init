@@ -32,12 +32,13 @@ done
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
-[ -d "skeleton/$family" ] && [ "$family" != common ] || { echo "No family \"$family\"; known: $(ls skeleton | grep -v '^common$' | tr '\n' ' ')" >&2; exit 2; }
+[ -d "skeleton/$family" ] && [ "$family" != common ] && [ "$family" != parts ] || { echo "No family \"$family\"; known: $(ls skeleton | grep -vE '^(common|parts|CI_SHA)$' | tr '\n' ' ')" >&2; exit 2; }
 printf '%s' "$name" | grep -Eq '^[a-z0-9][a-z0-9-]*$' || { echo "The name is lowercase letters, digits and dashes: $name" >&2; exit 2; }
 [ -n "$class" ] || class=$(printf '%s' "$name" | perl -pe 's/(^|-)([a-z0-9])/\U$2/g')
 printf '%s' "$class" | grep -Eq '^[A-Z][A-Za-z0-9]*$' || { echo "The class prefix is StudlyCaps: $class" >&2; exit 2; }
 
-# The family's facts.
+# The family's facts (parts: the shared pieces under skeleton/parts/ the family's skeleton uses).
+parts=''
 . "./skeleton/$family/family.env"
 namespace="$vendor_ns\\$class"
 package="$family/$name"
@@ -47,10 +48,12 @@ ci_sha=$(cat skeleton/CI_SHA)
 
 export P_NAME="$name" P_CLASS="$class" P_TITLE="$title" P_NS="$namespace" P_PACKAGE="$package" P_REPO="$repo" \
     P_FAMILY="$family" P_CORE="$core" P_CORE_REPO="$core_repo" P_CORE_CONSTRAINT="$core_constraint" P_VENDOR="$vendor_ns" \
-    P_BRANCH="$branch" P_CONTRACT="$contract" P_OWNER="$owner" P_AUTHOR="$author" P_EMAIL="$email" P_YEAR="$year" P_CI_SHA="$ci_sha"
+    P_BRANCH="$branch" P_CONTRACT="$contract" P_CORE_CLASS="$core_class" P_OWNER="$owner" P_AUTHOR="$author" P_EMAIL="$email" P_YEAR="$year" P_CI_SHA="$ci_sha"
 
-# Copy: common first, the family's files over it.
-for src in skeleton/common "skeleton/$family"; do
+# Copy: common first, then the parts the family uses, the family's files over them.
+sources=skeleton/common
+for part in $parts; do sources="$sources skeleton/parts/$part"; done
+for src in $sources "skeleton/$family"; do
     (cd "$src" && find . -type f ! -name family.env) | while read -r file; do
         target=$(printf '%s' "${file#./}" | perl -pe 's/__Name__/$ENV{P_CLASS}/g; s/__name__/$ENV{P_NAME}/g')
         mkdir -p "$(dirname "$target")"
@@ -61,7 +64,7 @@ for src in skeleton/common "skeleton/$family"; do
             s/__Namespace__/$ENV{P_NS}/g;
             s/__Name__/$ENV{P_CLASS}/g; s/__name__/$ENV{P_NAME}/g; s/__Title__/$ENV{P_TITLE}/g;
             s/__package__/$ENV{P_PACKAGE}/g; s/__repo__/$ENV{P_REPO}/g; s/__family__/$ENV{P_FAMILY}/g;
-            s/__core_repo__/$ENV{P_CORE_REPO}/g; s/__core_constraint__/$ENV{P_CORE_CONSTRAINT}/g; s/__core__/$ENV{P_CORE}/g;
+            s/__core_repo__/$ENV{P_CORE_REPO}/g; s/__core_class__/$ENV{P_CORE_CLASS}/g; s/__core_constraint__/$ENV{P_CORE_CONSTRAINT}/g; s/__core__/$ENV{P_CORE}/g;
             s/__Vendor__/$ENV{P_VENDOR}/g; s/__branch__/$ENV{P_BRANCH}/g; s/__Contract__/$ENV{P_CONTRACT}/g;
             s/__owner__/$ENV{P_OWNER}/g; s/__author__/$ENV{P_AUTHOR}/g; s/__email__/$ENV{P_EMAIL}/g;
             s/__year__/$ENV{P_YEAR}/g; s/__ci_sha__/$ENV{P_CI_SHA}/g;
@@ -78,4 +81,4 @@ rmdir bin 2>/dev/null || true
 rm -f .github/workflows/template.yml
 
 echo "$package ($namespace) made from the $family skeleton."
-echo "Next: composer install && vendor/bin/phpunit (the conformance suite runs), then CONTRIBUTING.md."
+echo "Next: composer install && vendor/bin/phpunit && vendor/bin/phpstan analyse (the conformance suite, then PHPStan), then CONTRIBUTING.md."

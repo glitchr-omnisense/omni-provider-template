@@ -3,37 +3,36 @@
 namespace __Namespace__\Tests;
 
 use __Namespace__\__Name__Factory;
-use PHPUnit\Framework\TestCase;
+use Omnisense\Contracts\Testing\BareTestCase;
 
 /**
- * __package__ with no framework: every class of the package loaded in a PHP
- * process of its own, and no class of a framework, an HTTP client or an
- * application among what that loaded.
+ * __package__ with no framework (omnisense/contracts' bare check): every
+ * class of the package loaded in a PHP process of its own, and nothing
+ * loaded from outside the package but __core__, omnisense/contracts and
+ * what composer.json requires - no framework, no HTTP client, no
+ * application, even where the tests' dependencies are installed beside it.
+ * A class over a suggested package says so in its docblock
+ * ("@suggested <package>") and is not loaded.
  */
-final class BareTest extends TestCase
+final class BareTest extends BareTestCase
 {
-    private const FOREIGN = '~^(?:Symfony\\\\(?!Contracts\\\\|Polyfill\\\\)|(?:Illuminate|Laravel|Doctrine|Twig|GuzzleHttp|Omnibridge|Base|App)\\\\)~';
-
-    public function testEveryClassLoadsWithoutAFramework(): void
+    protected static function entryClass(): string
     {
-        $autoload = null;
-        foreach (\Composer\Autoload\ClassLoader::getRegisteredLoaders() as $vendor => $loader) {
-            if ($loader->findFile(__Name__Factory::class)) {
-                $autoload = $vendor.'/autoload.php';
-            }
-        }
-        self::assertNotNull($autoload);
-        $process = proc_open([\PHP_BINARY, __DIR__.'/Fixtures/load-all.php', $autoload, \dirname(__DIR__)], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
-        self::assertIsResource($process);
-        $out = (string) stream_get_contents($pipes[1]);
-        $err = (string) stream_get_contents($pipes[2]);
-        self::assertSame(0, proc_close($process), $err.$out);
-        $report = json_decode($out, true);
-        self::assertIsArray($report, $err.$out);
-        self::assertIsArray($report['loaded']);
-        self::assertIsArray($report['symbols']);
+        return __Name__Factory::class;
+    }
 
-        self::assertContains(__Name__Factory::class, $report['loaded']);
-        self::assertSame([], array_values(preg_grep(self::FOREIGN, array_filter($report['symbols'], 'is_string')) ?: []), 'no class of a framework, an HTTP client or an application');
+    /** What composer.json's require names: the files of those packages may load, nothing else. */
+    protected static function requiredPackages(): array
+    {
+        $composer = json_decode((string) file_get_contents(\dirname(__DIR__).'/composer.json'), true, 512, \JSON_THROW_ON_ERROR);
+        $require = \is_array($composer) && \is_array($composer['require'] ?? null) ? $composer['require'] : [];
+
+        return array_values(array_filter(array_map(strval(...), array_keys($require)), static fn (string $package) => str_contains($package, '/')));
+    }
+
+    /** The core's folder too, wherever it is installed (a path repository's checkout in a harness). */
+    protected static function coreDirs(): array
+    {
+        return [...parent::coreDirs(), self::dirOf(\__core_class__::class)];
     }
 }

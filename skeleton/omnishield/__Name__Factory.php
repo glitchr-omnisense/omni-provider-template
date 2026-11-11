@@ -2,6 +2,7 @@
 
 namespace __Namespace__;
 
+use Omnisense\Contracts\Http\NoRetry;
 use Omnishield\Config;
 use Omnishield\Exception\InvalidConfigException;
 use Omnishield\GatewayFactory;
@@ -20,13 +21,20 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *   (new __Name__Factory($httpClient))->create(['site_key' => '...', 'secret' => '...']);
  *
  * The HTTP client is the application's, given to the constructor: the gateway
- * asks its provider about every token. Replace the defaults with the service's
+ * asks its provider about every token. It is kept with its retries off
+ * (omnisense/contracts' Http\NoRetry): a token serves once, and a retrying
+ * client (framework.http_client's retry_failed) would send it again after a
+ * 503 - its answer then "already used" - and hide a 429 from the gateway's
+ * Backoff (Tests/NoRetryTest.php). Replace the defaults with the service's
  * and declare its other options here.
  */
 final class __Name__Factory extends GatewayFactory
 {
-    public function __construct(private readonly ?HttpClientInterface $http = null)
+    private readonly ?HttpClientInterface $http;
+
+    public function __construct(?HttpClientInterface $http = null)
     {
+        $this->http = null !== $http ? NoRetry::of($http) : null;
     }
 
     protected function populate(Config $c): void

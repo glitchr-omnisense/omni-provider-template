@@ -15,8 +15,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * __Title__'s HTTP API: every call goes through request(), where its failures
  * become the family's ProviderException - an HTTP status of 400 or more, no
  * answer, a body that is not JSON (a proxy's page) - with the provider's own
- * error code when it gives one; transaction() reads a payment as the family's
- * Transaction. Replace the authentication, the address, the fields and
+ * error code when it gives one; its answers are read through Data, so that
+ * nothing casts a mixed value blindly; transaction() reads a payment as the
+ * family's Transaction. Replace the authentication, the address, the fields and
  * STATUSES with the service's. Given the gateway's Backoff (the factory's
  * Config::backoff()), a 429 is a RateLimitedException and the provider's
  * Retry-After holds every next call, refused without a request.
@@ -46,11 +47,11 @@ final class Api
     }
 
     /**
-     * @param array<string, mixed> $options the HTTP client's options (query, json, body, headers...)
+     * The answer's JSON, read through Data (never a cast of mixed).
      *
-     * @return array<mixed> the answer's JSON
+     * @param array<string, mixed> $options the HTTP client's options (query, json, body, headers...)
      */
-    public function request(string $method, string $path, array $options = []): array
+    public function request(string $method, string $path, array $options = []): Data
     {
         $options['headers'] = (\is_array($options['headers'] ?? null) ? $options['headers'] : []) + ['Authorization' => 'Bearer '.$this->secretKey, 'Accept' => 'application/json'];
         Throttle::before($this->backoff);
@@ -66,43 +67,39 @@ final class Api
 
         $data = json_decode($body, true);
         if ($status >= 400) {
-            $error = \is_array($data) ? $data : [];
-            $code = \is_scalar($error['error'] ?? null) ? (string) $error['error'] : (string) $status;
-            $message = \is_scalar($error['message'] ?? null) ? (string) $error['message'] : substr(trim($body), 0, 200);
+            $error = Data::of($data);
 
-            throw new ProviderException($this->provider, \sprintf('HTTP %d: %s', $status, $message), $code);
+            throw new ProviderException($this->provider, \sprintf('HTTP %d: %s', $status, $error->string('message') ?? substr(trim($body), 0, 200)), $error->string('error') ?? (string) $status);
         }
         if (!\is_array($data)) {
             throw new ProviderException($this->provider, \sprintf('HTTP %d, not JSON: %s', $status, substr(trim($body), 0, 200)));
         }
 
-        return $data;
+        return Data::of($data);
     }
 
     /**
      * A payment as the provider answers it:
      * {"id", "status", "amount" (minor units), "currency", "checkout_url"}.
-     *
-     * @param array<mixed> $payment
      */
-    public function transaction(array $payment): Transaction
+    public function transaction(Data $payment): Transaction
     {
-        $id = $payment['id'] ?? null;
-        $status = self::STATUSES[\is_string($payment['status'] ?? null) ? $payment['status'] : ''] ?? null;
-        if (!\is_string($id) || '' === $id || null === $status) {
+        $id = $payment->string('id');
+        $status = self::STATUSES[$payment->text('status')] ?? null;
+        if (null === $id || null === $status) {
             throw new ProviderException($this->provider, 'A payment without its id or a known status.');
         }
-        $amount = $payment['amount'] ?? null;
-        $currency = $payment['currency'] ?? null;
-        $url = $payment['checkout_url'] ?? null;
+        $amount = $payment->int('amount');
+        $currency = $payment->string('currency');
+        $url = $payment->string('checkout_url');
 
         return new Transaction(
             provider: $this->provider,
             reference: $id,
             status: $status,
-            amount: \is_int($amount) && \is_string($currency) ? Money::of($amount, strtoupper($currency)) : null,
-            redirectUrl: Status::PENDING === $status && \is_string($url) && '' !== $url ? $url : null,
-            raw: $payment,
+            amount: null !== $amount && null !== $currency ? Money::of($amount, strtoupper($currency)) : null,
+            redirectUrl: Status::PENDING === $status ? $url : null,
+            raw: $payment->toArray(),
         );
     }
 }

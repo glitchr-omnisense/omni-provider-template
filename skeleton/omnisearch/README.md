@@ -24,7 +24,9 @@ $registry = new __Vendor__\Registry([new __Name__Factory()], ['default' => ['dri
 
 - Verified (`vendor/bin/phpunit`, PHP 8.4): __family__'s conformance suite
   (`Tests/__Name__ContractTest.php`, `__Vendor__\Testing\__Contract__`);
-  every class loaded with the package's requirements alone (`BareTest`).
+  every class loaded with the package's requirements alone (`BareTest`); the usage policy read
+  and valid (`PolicyTest`); where an HTTP client is given, a write answered 503 sent once through
+  a retrying client (`NoRetryTest`); PHPStan at level max, its baseline empty.
 - Not verified yet: the engine itself. Say here what was run against a real server, when, and
   how (a `live` PHPUnit group, a server in Docker).
 

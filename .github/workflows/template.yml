@@ -42,5 +42,5 @@ jobs:
           composer validate --no-check-publish --no-check-lock
           composer update --no-progress --prefer-dist
           vendor/bin/phpunit
-          phpstan=phpstan; [ -x vendor/bin/phpstan ] && phpstan=vendor/bin/phpstan
-          $phpstan analyse --no-progress --memory-limit=2G
+          vendor/bin/phpstan analyse --no-progress --memory-limit=2G
+          test "$(grep -c . phpstan-baseline.neon)" -le 2   # the baseline as generated: empty

@@ -10,7 +10,8 @@
         "storage": "unknown",
         "redistribution": "unknown",
         "attribution": {"required": false, "text": null, "url": null, "where": []},
-        "licence": null
+        "licence": null,
+        "retention": null
     },
     "requirements": {
         "key": false,
@@ -22,6 +23,6 @@
         "verifiedAt": null,
         "declaredBy": "maintainer",
         "contact": null,
-        "notes": "A starting point, nothing read yet: read __Title__'s terms and usage policy at their source, then fill this file in and set verifiedAt to that day - rateLimits (null while unknown, [] when the terms set none; a window of several units with \"every\", a quota counted in characters, units or points with \"unit\" and each operation's \"cost\"), concurrency, the rights (unknown stays unknown: a site cannot turn it into allowed), what a request must carry (a key, a User-Agent), the terms' address. omnisense/contracts' docs/declare-your-policy.md says how."
+        "notes": "A starting point, nothing read yet: read __Title__'s terms and usage policy at their source today, fill this file in and set verifiedAt to that day; what the terms do not publish stays unknown (null, \"unknown\"), never \"allowed\" - a site cannot loosen it. rateLimits: null while unknown, [] when the terms set none; each limit's window (second, minute, hour, day, month) and \"every\" for several of them (500 every 5 minutes), its scope (application, key, client-ip, user, or resource with \"per\": 6 a day per parcel, counted under the operation the provider names), its operations, its \"unit\" (requests, characters, units, points) and each operation's \"cost\". concurrency: the requests the terms let run at once. plans: the published plans' limits (Free, Pro...), a default one, the factory's \"plan\" option picking another. rights: commercial use, open source, caching (maxTtl), storage, redistribution, the credit, the licence, retention (how long the data may be kept at all). requirements: a key, a User-Agent. omnisense/contracts' docs/declare-your-policy.md says how, field by field."
     }
 }

@@ -3,6 +3,7 @@
 namespace __Namespace__;
 
 use Omnimap\Config;
+use Omnisense\Contracts\Http\NoRetry;
 use Omnimap\ProviderFactory;
 use Omnimap\ProviderInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -16,14 +17,20 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *   max_zoom     19
  *   user_agent   sent with every tile the server fetches (images made of tiles)
  *
- * The HTTP client and the cache are the application's, given here: never created inside.
+ * The HTTP client and the cache are the application's, given here: never created inside. The
+ * client is kept with its retries off (omnisense/contracts' Http\NoRetry): a retrying client
+ * (framework.http_client's retry_failed) would fetch a tile a server refused with 429 or 503 again
+ * and again, requests nobody counted against the tile server's policy (Tests/NoRetryTest.php).
  */
 final class __Name__Factory extends ProviderFactory
 {
+    private readonly ?HttpClientInterface $http;
+
     public function __construct(
-        private readonly ?HttpClientInterface $http = null,
+        ?HttpClientInterface $http = null,
         private readonly ?CacheInterface $cache = null,
     ) {
+        $this->http = null !== $http ? NoRetry::of($http) : null;
     }
 
     protected function populate(Config $c): void
