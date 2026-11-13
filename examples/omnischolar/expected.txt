@@ -1,2 +1,2 @@
-Multichromophoric sugar for fluorescence photoswitching
-https://hal.science/hal-02489392/document
+Bichromatic state-dependent disordered potential for Anderson localization of ultracold atoms
+https://iogs.hal.science/hal-03843937/document

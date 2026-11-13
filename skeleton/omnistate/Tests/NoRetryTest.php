@@ -24,25 +24,25 @@ final class NoRetryTest extends TestCase
 
     public function testTheRetryingClientIsNotBlind(): void
     {
-        self::assertSame(200, $this->retrying()->request('GET', 'https://registry.example.org/api/companies/901821074')->getStatusCode());
+        self::assertSame(200, $this->retrying()->request('GET', 'https://registry.example.org/api/companies/552032534')->getStatusCode());
         self::assertCount(2, $this->sent, 'Symfony resends a request answered 503');
     }
 
     public function testALookupAnswered503IsSentOnce(): void
     {
         try {
-            (new __Name__($this->retrying()))->company('901821074');
+            (new __Name__($this->retrying()))->company('552032534');
             self::fail('A 503 was an answer.');
         } catch (UnavailableException $e) {
             self::assertStringContainsString('503', $e->getMessage());
         }
-        self::assertSame(['GET https://registry.example.org/api/companies/901821074'], $this->sent);
+        self::assertSame(['GET https://registry.example.org/api/companies/552032534'], $this->sent);
     }
 
     /** The application's client as a retrying one: 503 first, then 200 - no delay, so a retry would show at once. */
     private function retrying(): RetryableHttpClient
     {
-        $answers = [new MockResponse('Service Unavailable', ['http_code' => 503]), new MockResponse('{"id": "901821074", "name": "GLITCH ART", "status": "active", "country": "FR"}')];
+        $answers = [new MockResponse('Service Unavailable', ['http_code' => 503]), new MockResponse('{"id": "552032534", "name": "DANONE", "status": "active", "country": "FR"}')];
         $mock = new MockHttpClient(function (string $method, string $url) use (&$answers): MockResponse {
             $this->sent[] = $method.' '.$url;
 

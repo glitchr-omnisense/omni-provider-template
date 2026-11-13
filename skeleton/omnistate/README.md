@@ -7,7 +7,7 @@ Plain PHP: no framework in `require`.
 use __Namespace__\__Name__;
 
 $register = new __Name__($httpClient); // the application's Symfony\Contracts\HttpClient\HttpClientInterface
-$company = $register->company('901821074');
+$company = $register->company('552032534');
 ```
 
 Through the family's facade, beside the other registers:

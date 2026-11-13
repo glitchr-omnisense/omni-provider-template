@@ -26,10 +26,10 @@ final class __Name__ContractTest extends TestCase
     /** @return array<string, array<string, mixed>> */
     protected function recordedAnswers(): array
     {
-        $company = ['id' => '901821074', 'name' => 'GLITCH ART', 'status' => 'active', 'country' => 'FR'];
+        $company = ['id' => '552032534', 'name' => 'DANONE', 'status' => 'active', 'country' => 'FR'];
 
         return [
-            'GET /api/companies/901821074' => $company,
+            'GET /api/companies/552032534' => $company,
             'GET /api/companies' => ['results' => [$company, ['id' => '901821075', 'name' => 'GLITCH STUDIO', 'status' => 'closed', 'country' => 'FR']]],
         ];
     }
