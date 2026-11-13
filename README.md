@@ -20,6 +20,13 @@ omnitrade, omnistate, omnishield, omnisearch, omniauth), on
   release workflows of [glitchr-studio/ci](https://github.com/glitchr-studio/ci), pinned to a
   commit.
 
+The other families have a starting skeleton (omnishow, omnipulse, omnilab), on their 1.0 cores from Packagist
+at the default minimum-stability: the provider class implementing the family's provider contract, its
+methods refused with the family's `NotSupportedException` ("not written yet") and its capabilities
+promising nothing, the starting `policy.json` and its test, a first-call test through the family's
+registry, the `BareTest`, and a README saying what to fill in. No conformance suite is wired: it
+would fail on purpose until the provider answers.
+
 [CONTRIBUTING.md](CONTRIBUTING.md) is the way through, and ends with the checklist a maintainer
 or an API company follows.
 

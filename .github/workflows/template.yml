@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        family: [omnimap, omnidrive, omnibus, omnitrade, omnistate, omnishield, omnisearch, omniauth]
+        family: [omnimap, omnidrive, omnibus, omnitrade, omnistate, omnishield, omnisearch, omniauth, omnishow, omnipulse, omnilab]
     env:
       COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ github.token }}"}}'
     steps:
