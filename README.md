@@ -20,12 +20,16 @@ omnitrade, omnistate, omnishield, omnisearch, omniauth), on
   release workflows of [glitchr-studio/ci](https://github.com/glitchr-studio/ci), pinned to a
   commit.
 
-The other families have a starting skeleton (omnibank, omnibill, omnical, omnicrawl, omnidns, omnifood, omnilab, omnilang, omnilex, omnimeet, omniplay, omnipost, omnipulse, omnischolar, omnishow, omnisign, omnisong, omnistay, omniticket, omnitravel), on their 1.0 cores from Packagist
-at the default minimum-stability: the provider class implementing the family's provider contract, its
-methods refused with the family's `NotSupportedException` ("not written yet") and its capabilities
-promising nothing, the starting `policy.json` and its test, a first-call test through the family's
-registry, the `BareTest`, and a README saying what to fill in. No conformance suite is wired: it
-would fail on purpose until the provider answers.
+The other families have a starting skeleton (omnibank, omnibill, omnical, omnicrawl, omnidns,
+omnifood, omnilab, omnilang, omnilex, omnimeet, omniplay, omnipost, omnipulse, omnischolar, omnishow,
+omnisign, omnisong, omnistay, omniticket, omnitravel), on their stable cores from Packagist at the
+default minimum-stability: the provider class in the family's own shape (a provider, a source, a
+platform, a catalogue or a gateway factory), refused the family's way until written (its
+`NotSupportedException`, or the registry's refusal of a contract the class does not implement) and
+promising nothing in its capabilities; the starting `policy.json` and its test; a first-call test
+through the family's registry; the `BareTest`; the CI and release workflows; a README saying what to
+fill in. No conformance suite is wired: it would fail on purpose until the provider answers.
+omnidocs and omnihub have none yet: their cores have no stable release.
 
 [CONTRIBUTING.md](CONTRIBUTING.md) is the way through, and ends with the checklist a maintainer
 or an API company follows.
