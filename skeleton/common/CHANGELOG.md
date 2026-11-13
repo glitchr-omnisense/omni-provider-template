@@ -7,5 +7,4 @@ workflow refuses a tag without one.
 ## Unreleased
 
 ### Added
-- __Title__ for __core__: the factory `__name__`, the provider, __family__'s conformance suite
-  (`Tests/__Name__ContractTest.php`).
+- __Title__ for __core__: the factory `__name__`, the provider and its tests.

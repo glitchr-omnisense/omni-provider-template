@@ -1,6 +1,6 @@
 # The package's CI: glitchr-studio/ci's reusable workflow, pinned to a commit (the PHP 8.4 image, the
-# package installed alone, PHPUnit with the conformance suite, PHPStan against phpstan-baseline.neon,
-# a consumer install without require-dev).
+# package installed alone, PHPUnit with its tests, PHPStan at max against phpstan-baseline.neon, a
+# consumer install without require-dev).
 name: ci
 
 on:
@@ -8,6 +8,8 @@ on:
     branches: ['__branch__']
   pull_request:
   workflow_dispatch:
+  # release.yml runs this CI on a tag before the release.
+  workflow_call:
 
 permissions:
   contents: read
@@ -17,4 +19,4 @@ jobs:
   package:
     uses: glitchr-studio/ci/.github/workflows/php-package.yml@__ci_sha__
     with:
-      smoke-class: '__Namespace_escaped__\__Name__Factory'
+      smoke-class: '__Namespace_escaped__\__Entry__'

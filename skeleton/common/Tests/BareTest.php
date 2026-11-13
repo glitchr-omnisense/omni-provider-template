@@ -2,7 +2,7 @@
 
 namespace __Namespace__\Tests;
 
-use __Namespace__\__Name__Factory;
+use __Namespace__\__Entry__;
 use Omnisense\Contracts\Testing\BareTestCase;
 
 /**
@@ -18,7 +18,7 @@ final class BareTest extends BareTestCase
 {
     protected static function entryClass(): string
     {
-        return __Name__Factory::class;
+        return __Entry__::class;
     }
 
     /** What composer.json's require names: the files of those packages may load, nothing else. */

@@ -39,6 +39,8 @@ printf '%s' "$class" | grep -Eq '^[A-Z][A-Za-z0-9]*$' || { echo "The class prefi
 
 # The family's facts (parts: the shared pieces under skeleton/parts/ the family's skeleton uses).
 parts=''
+# The class the CI loads (smoke-class) and BareTest starts from; a family.env may name another.
+entry='__Name__Factory'
 . "./skeleton/$family/family.env"
 namespace="$vendor_ns\\$class"
 package="$family/$name"
@@ -48,7 +50,7 @@ ci_sha=$(cat skeleton/CI_SHA)
 
 export P_NAME="$name" P_CLASS="$class" P_TITLE="$title" P_NS="$namespace" P_PACKAGE="$package" P_REPO="$repo" \
     P_FAMILY="$family" P_CORE="$core" P_CORE_REPO="$core_repo" P_CORE_CONSTRAINT="$core_constraint" P_VENDOR="$vendor_ns" \
-    P_BRANCH="$branch" P_CONTRACT="$contract" P_CORE_CLASS="$core_class" P_OWNER="$owner" P_AUTHOR="$author" P_EMAIL="$email" P_YEAR="$year" P_CI_SHA="$ci_sha"
+    P_BRANCH="$branch" P_CONTRACT="$contract" P_CORE_CLASS="$core_class" P_OWNER="$owner" P_AUTHOR="$author" P_EMAIL="$email" P_YEAR="$year" P_CI_SHA="$ci_sha" P_ENTRY="$entry"
 
 # Copy: common first, then the parts the family uses, the family's files over them.
 sources=skeleton/common
@@ -59,6 +61,7 @@ for src in $sources "skeleton/$family"; do
         mkdir -p "$(dirname "$target")"
         cp "$src/$file" "$target"
         perl -pi -e '
+            s/__Entry__/$ENV{P_ENTRY}/g;
             s/__Namespace_json__/do { (my $n = $ENV{P_NS}) =~ s{\\}{\\\\}g; $n }/ge;
             s/__Namespace_escaped__/$ENV{P_NS}/g;
             s/__Namespace__/$ENV{P_NS}/g;
@@ -72,7 +75,7 @@ for src in $sources "skeleton/$family"; do
     done
 done
 
-left=$(grep -rlE '__(Name|name|Title|Namespace|package|core|family|Vendor|branch|owner|author|email|year|ci_sha|Contract)[a-z_]*__' --exclude-dir=.git --exclude-dir=skeleton --exclude-dir=bin . || true)
+left=$(grep -rlE '__(Name|name|Title|Namespace|package|core|family|Vendor|branch|owner|author|email|year|ci_sha|Contract|Entry)[a-z_]*__' --exclude-dir=.git --exclude-dir=skeleton --exclude-dir=bin . || true)
 [ -z "$left" ] || { echo "Placeholders left in: $left" >&2; exit 1; }
 
 rm -rf skeleton bin/init
