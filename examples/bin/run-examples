@@ -1,0 +1,22 @@
+#!/bin/sh
+# Runs every <family>/first-call.php and compares what it prints with <family>/expected.txt.
+# A family with a PENDING file is skipped (its provider has no stable release on Packagist yet).
+# Exit status: 1 when one example fails, 0 otherwise. POSIX sh: it runs in the composer:2 (Alpine) image too.
+cd "$(dirname "$0")/.." || exit 2
+pass=0; fail=0; pending=0; failed=''
+for script in */first-call.php; do
+  family=${script%%/*}
+  if [ -f "$family/PENDING" ]; then
+    echo "PENDING $family: $(head -n 1 "$family/PENDING")"; pending=$((pending + 1)); continue
+  fi
+  out=$(php "$script" 2>&1); status=$?
+  if [ $status -eq 0 ] && [ "$out" = "$(cat "$family/expected.txt" 2>/dev/null)" ]; then
+    echo "PASS    $family"; pass=$((pass + 1))
+  else
+    echo "FAIL    $family (exit $status)"; fail=$((fail + 1)); failed="$failed $family"
+    printf '%s\n' "$out" > "/tmp/$family.out"
+    diff "$family/expected.txt" "/tmp/$family.out" | sed 's/^/        /'
+  fi
+done
+echo "$pass passed, $fail failed, $pending pending"
+[ $fail -eq 0 ] || { echo "failed:$failed"; exit 1; }

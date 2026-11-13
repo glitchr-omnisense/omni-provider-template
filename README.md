@@ -63,6 +63,13 @@ or an API company follows.
 (but `common` and `parts`, the pieces several families share); `.github/workflows/template.yml`
 generates each of them and runs its suite and PHPStan on every change here.
 
+## First calls
+
+[examples/](examples/) holds one first call per family, in plain PHP, installed from Packagist at
+Composer's default stability and run without an account or a key: what using a family looks like
+before writing a provider for it. `.github/workflows/examples.yml` installs and runs them on every
+change and every night. `bin/init` removes the folder from a generated provider.
+
 ## Licence
 
 MIT.

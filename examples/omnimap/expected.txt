@@ -1,0 +1,2 @@
+openstreetmap, 1 marker: Gion
+<div id="map" data-omnimap="map" ...>

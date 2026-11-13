@@ -1,0 +1,46 @@
+# examples/: installs every family from Packagist exactly as a stranger would - no lock file, no path repository, the
+# default (stable) minimum-stability - and runs each first call (bin/run-examples). Nightly too, so a release
+# that breaks a first call shows here the next morning. Each image is run with docker on the runner: the
+# official composer image (the latest PHP) and the families' own CI image (PHP 8.4).
+name: examples
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  examples:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: composer:2 (latest PHP)
+            image: composer:2
+          - name: PHP 8.4
+            image: ghcr.io/glitchr-studio/php:8.4
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install from Packagist and run every first call
+        env:
+          # Composer downloads the archives from GitHub's API: the job's token lifts the anonymous rate limit.
+          # A stranger installing on their own machine needs nothing of the kind.
+          COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ github.token }}"}}'
+        run: |
+          docker run --rm -e COMPOSER_AUTH -v "$PWD/examples:/app" -w /app --entrypoint sh "${{ matrix.image }}" -c '
+            php -v | head -n 1
+            composer validate --no-check-publish --no-check-lock
+            composer update --no-interaction --no-progress --prefer-dist
+            composer show --direct
+            sh bin/run-examples
+          '

@@ -78,10 +78,10 @@ done
 left=$(grep -rlE '__(Name|name|Title|Namespace|package|core|family|Vendor|branch|owner|author|email|year|ci_sha|Contract|Entry)[a-z_]*__' --exclude-dir=.git --exclude-dir=skeleton --exclude-dir=bin . || true)
 [ -z "$left" ] || { echo "Placeholders left in: $left" >&2; exit 1; }
 
-rm -rf skeleton bin/init
+rm -rf skeleton examples bin/init
 rmdir bin 2>/dev/null || true
 # The template's own self-test is not the provider's.
-rm -f .github/workflows/template.yml
+rm -f .github/workflows/template.yml .github/workflows/examples.yml
 
 echo "$package ($namespace) made from the $family skeleton."
 echo "Next: composer install && vendor/bin/phpunit && vendor/bin/phpstan analyse (the conformance suite, then PHPStan), then CONTRIBUTING.md."
