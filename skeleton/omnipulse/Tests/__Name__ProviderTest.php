@@ -40,6 +40,7 @@ final class __Name__ProviderTest extends TestCase
         self::assertInstanceOf(__Name__Provider::class, $provider);
 
         $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('is not written');
         $provider->audience(new ReachQuery(new \DateTimeImmutable('-7 days'), new \DateTimeImmutable()));
     }
 

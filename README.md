@@ -20,7 +20,7 @@ omnitrade, omnistate, omnishield, omnisearch, omniauth), on
   release workflows of [glitchr-studio/ci](https://github.com/glitchr-studio/ci), pinned to a
   commit.
 
-The other families have a starting skeleton (omnishow, omnipulse, omnilab), on their 1.0 cores from Packagist
+The other families have a starting skeleton (omnical, omnicrawl, omnidns, omnilab, omnilang, omniplay, omnipulse, omnishow, omnistay, omniticket, omnitravel), on their 1.0 cores from Packagist
 at the default minimum-stability: the provider class implementing the family's provider contract, its
 methods refused with the family's `NotSupportedException` ("not written yet") and its capabilities
 promising nothing, the starting `policy.json` and its test, a first-call test through the family's
